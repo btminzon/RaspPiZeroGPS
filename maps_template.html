@@ -15,7 +15,11 @@
   <body>
     <h2>Last fix: $timefix UTC</h2>
     <div id="map" class="map"></div>
-    <script type="text/javascript">
+    <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+      <div id="popup-content"></div>
+    </div>
+   <script type="text/javascript">
       var map = new ol.Map({
         target: 'map',
         layers: [
@@ -28,6 +32,48 @@
           zoom: 16
         })
       });
+
+      var layer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+          features: [
+             new ol.Feature({
+                 geometry: new ol.geom.Point(ol.proj.fromLonLat([$lng, $lat]))
+                 })
+            ]
+         })
+     });
+     map.addLayer(layer);
+    
+     var container = document.getElementById('popup');
+     var content = document.getElementById('popup-content');
+     var closer = document.getElementById('popup-closer');
+
+     var overlay = new ol.Overlay({
+        element: container,
+        autoPan: true,
+        autoPanAnimation: {
+            duration: 250
+        }
+     });
+    map.addOverlay(overlay);
+
+    closer.onclick = function() {
+       overlay.setPosition(undefined);
+       closer.blur();
+       return false;
+    };
+
+    map.on('singleclick', function (event) {
+      if (map.hasFeatureAtPixel(event.pixel) === true) {
+         var coordinate = event.coordinate;
+
+         content.innerHTML = '<b>Last location seen</b><br />$lat $lng';
+         overlay.setPosition(coordinate);
+      } else {
+         overlay.setPosition(undefined);
+         closer.blur();
+      }
+    });    
     </script>
-  </body>
+ </body>
 </html>
