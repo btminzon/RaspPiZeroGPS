@@ -20,7 +20,6 @@ in_file.close()
 def generateHtml(latlng):
     global template
     output = Template(template).substitute(lat=latlng[0], lng=latlng[1], timefix=latlng[2])
-    #print(output)
     out_file = open("/var/www/html/gps/index.html", "wt")
     out_file.write(output)
     out_file.close()
@@ -51,7 +50,7 @@ def printRMC(lines):
     global counter
     print("========================================RMC========================================")
     fixTime = ''
-    fixTime = ''.join(getTime(lines[1]+lines[9], "%H%M%S.%f%d%m%y", "%a %b %d %H:%M:%S %Y"))
+    fixTime = ''.join(getTime(lines[1]+lines[9], "%H%M%S.%W%d%m%y", "%a %b %d %H:%M:%S %Y")) # added a %W to ignore 00  str
     print("Fix taken at:" + fixTime, "UTC")
     print("Status (A=OK,V=KO):", lines[2])
     latlng = getLatLng(lines[3],lines[4],lines[5],lines[6],fixTime)
@@ -72,10 +71,10 @@ def printRMC(lines):
 
 def printGGA(lines):
     print("========================================GGA========================================")
-    #print(lines, '\n')
+
     fixTime = ''
     fixTime = ''.join(getTime(lines[1], "%H%M%S.%f", "%H:%M:%S"))
-    print("Fix taken at:", getTime(lines[1], "%H%M%S.%f", "%H:%M:%S"), "UTC")
+    print("Fix taken at:", fixTime, "UTC")
     latlng = getLatLng(lines[2],lines[3],lines[4],lines[5],fixTime)
     print("Lat,Long: ", latlng[0].replace('-',''), lines[3], ", ", latlng[1].replace('-',''), lines[5], sep='')
     print("Fix quality (0 = invalid, 1 = fix, 2..8):", lines[6])
@@ -88,7 +87,6 @@ def printGGA(lines):
 
 def printGSA(lines):
     print("========================================GSA========================================")
-    #print(lines, '\n')
 
     print("Selection of 2D or 3D fix (A=Auto,M=Manual):", lines[1])
     print("3D fix (1=No fix,2=2D fix, 3=3D fix):", lines[2])
@@ -106,7 +104,6 @@ def printGSV(lines):
         print("========================================GSV========================================")
     else:
         print("===================================================================================")
-    #print(lines, '\n')
 
     print("Number of sentences:", lines[1])
     print("Sentence:", lines[2])
@@ -119,20 +116,19 @@ def printGSV(lines):
 
 def printGLL(lines):
     print("========================================GLL========================================")
-    #print(lines, '\n')
 
     fixTime = ''
+
     fixTime = ''.join(getTime(lines[5], "%H%M%S.%f", "%H:%M:%S"))
     latlng = getLatLng(lines[1],lines[2],lines[3],lines[4],fixTime)
     print("Lat,Long: ", latlng[0].replace('-',''), lines[2], ", ", latlng[1].replace('-',''), lines[4], sep='')
-    print("Fix taken at:", getTime(lines[5], "%H%M%S.%f", "%H:%M:%S"), "UTC")
+    print("Fix taken at:", fixTime, "UTC")
     print("Status (A=OK,V=KO):", lines[6])
     if lines[7].partition("*")[0]: # Extra field since NMEA standard 2.3
         print("Mode (A=Autonomous, D=Differential, E=Estimated, N=Data not valid):", lines[7].partition("*")[0])
 
 def printVTG(lines):
     print("========================================VTG========================================")
-    #print(lines, '\n')
 
     print("True Track made good (deg):", lines[1], lines[2])
     print("Magnetic track made good (deg):", lines[3], lines[4])
@@ -174,10 +170,8 @@ if __name__ == '__main__':
                 printGGA(lines)
                 pass
             elif lines[0][2:] == "GSA":
-                #printGSA(lines)
                 pass
             elif lines[0][2:] == "GSV":
-                #printGSV(lines)
                 pass
             elif lines[0][2:] == "GLL":
                 printGLL(lines)
