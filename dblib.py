@@ -8,7 +8,7 @@ import pymysql
 #    *  Date
 #       Latitude
 #       Longitude
-#       
+#
 #   routeId
 #   Columns
 #    *  route
@@ -17,6 +17,22 @@ import pymysql
 class dblib:
     def __init__(self, dbFolder = None):
         self.connectToSql()
+
+	def getLastRouteId(self):
+	    if self.connected:
+                query = "SELECT * FROM routeId"
+                self.cur.execute(query)
+                return self.cur.fetchone()
+            else:
+                print("getLastRouteId: Not connected to DB")
+
+        def setNewRouteId(self, lastUsedRouteId):
+	    if self.connected:
+                newRouteId = lastUsedRouteId + 1
+            query = "UPDATE routeId SET route = " + newRouteId + " WHERE route = " + lastUsedRouteId
+            self.cur.execute(query)
+            else:
+                print("setNewRouteId: Not connected to DB")
 
     def connectToSql(self):
         try:
@@ -33,20 +49,26 @@ class dblib:
             query = "SELECT * FROM routes WHERE RouteID ='" + routeID
             self.cur.execute(query)
             return self.cur.fetchone() # TODO: return the whole query
-        return None
+        else:
+            print("getRoute: Not connected to DB")
 
-    def insertCoordinate(self, routeID, date, latitude, longitude):
+    def insertCoordinate(self, date, latitude, longitude, isNewRoute = False):
         if self.connected:
             query = "SELECT RouteID,Date FROM routes WHERE RouteID = " + routeID " AND Date = " + date 
             self.cur.execute(query)
             if self.cur.rowcount == 0:
+                routeID = self.getLastRouteId()
+                if isNewRoute:
+                    routeID = self.setNewRouteId(routeID)
                 query = "INSERT INTO routes" + " (`RouteID`, `Date`, `Latitude`, `Longitude`) VALUES ('" + routeID + "','" + date + "','" + latitude + "','" + longitude + "')"
-				self.cur.execute(query)
-				self.con.commit()
-			else:
-				print("Primary Key Violation: RouteID " + routeId + " already inserted with Date = " + date)
+                self.cur.execute(query)
+                self.con.commit()
+            else:
+                print("Primary Key Violation: RouteID " + routeId + " already inserted with Date = " + date)
 
 
-def saveCoordinate(routeID, date, latitude, longitude):
+def saveCoordinate(date, latitude, longitude):
     lib = DBlib()
-    lib.insertCoordinate(routeID, date, latitude, longitude)
+    lib.insertCoordinate(date, latitude, longitude)
+
+
