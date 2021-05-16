@@ -4,6 +4,7 @@ import serial
 import time
 import os
 import sys
+import dblib
 from string import Template
 
 if os.geteuid() != 0: # Source: https://gist.github.com/davejamesmiller/1965559
@@ -34,7 +35,7 @@ def readString():
 def getTime(string,format,returnFormat):
     return time.strftime(returnFormat, time.strptime(string, format)) # Convert date and time to a nice printable format
 
-def getLatLng(latString,latDir,lngString,lngDir,fixTimeString):
+def getLatLng(latString, latDir, lngString, lngDir, fixTimeString, db):
     lat = latString[:2].lstrip('0') + "." + "%.4s" % str(float(latString[2:])*1.0/60.0).lstrip("0.")
     lng = lngString[:3].lstrip('0') + "." + "%.4s" % str(float(lngString[3:])*1.0/60.0).lstrip("0.")
 
@@ -44,9 +45,10 @@ def getLatLng(latString,latDir,lngString,lngDir,fixTimeString):
     if lngDir == 'W':
        lng = '-' + lng
 
+    db.saveCoordinate(fixTimeString, lat, lng)
     return lat,lng,fixTimeString
 
-def printRMC(lines):
+def printRMC(lines, db):
     global counter
     print("========================================RMC========================================")
     fixTime = ''
@@ -69,7 +71,7 @@ def printRMC(lines):
         counter = 0
         generateHtml(latlng)
 
-def printGGA(lines):
+def printGGA(lines, db):
     print("========================================GGA========================================")
 
     fixTime = ''
@@ -85,7 +87,7 @@ def printGGA(lines):
     print("Time in seconds since last DGPS update:", lines[13])
     print("DGPS station ID number:", lines[14].partition("*")[0])
 
-def printGSA(lines):
+def printGSA(lines, db):
     print("========================================GSA========================================")
 
     print("Selection of 2D or 3D fix (A=Auto,M=Manual):", lines[1])
@@ -99,7 +101,7 @@ def printGSA(lines):
     print("HDOP", lines[16])
     print("VDOP", lines[17].partition("*")[0])
 
-def printGSV(lines):
+def printGSV(lines, db):
     if lines[2] == '1': # First sentence
         print("========================================GSV========================================")
     else:
@@ -114,7 +116,7 @@ def printGSV(lines):
         print("Azimuth (deg):", lines[6+i*4].lstrip("0"))
         print("SNR (higher is better):", lines[7+i*4].partition("*")[0])
 
-def printGLL(lines):
+def printGLL(lines, db):
     print("========================================GLL========================================")
 
     fixTime = ''
@@ -127,7 +129,7 @@ def printGLL(lines):
     if lines[7].partition("*")[0]: # Extra field since NMEA standard 2.3
         print("Mode (A=Autonomous, D=Differential, E=Estimated, N=Data not valid):", lines[7].partition("*")[0])
 
-def printVTG(lines):
+def printVTG(lines, db):
     print("========================================VTG========================================")
 
     print("True Track made good (deg):", lines[1], lines[2])
@@ -159,25 +161,28 @@ def checksum(line):
         return False
 
 if __name__ == '__main__':
+    db = dblib()
+    db.startNewRoute()
+ 
     while 1:
         line = readString()
         lines = line.split(",")
         if checksum(line):
             if lines[0][2:] == "RMC":
-                printRMC(lines)
+                printRMC(lines, db)
                 pass
             elif lines[0][2:] == "GGA":
-                printGGA(lines)
+                printGGA(lines, db)
                 pass
             elif lines[0][2:] == "GSA":
                 pass
             elif lines[0][2:] == "GSV":
                 pass
             elif lines[0][2:] == "GLL":
-                printGLL(lines)
+                printGLL(lines, db)
                 pass
             elif lines[0][2:] == "VTG":
-                printVTG(lines)
+                printVTG(lines, db)
                 pass
             else:
                 print("\n\nUnknown type:", lines[0], "\n\n")

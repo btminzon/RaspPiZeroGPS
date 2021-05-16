@@ -54,14 +54,14 @@ class dblib:
         if self.connected:
             query = "SELECT * FROM routes WHERE RouteID ='" + routeID
             self.cur.execute(query)
-            return self.cur.fetchone() # TODO: return the whole query
+            return self.cur.fetchall()
         else:
             print("getRoute: Not connected to DB")
 
 
     def insertCoordinate(self, date, latitude, longitude):
         if self.connected:
-            query = "SELECT RouteID,Date FROM routes WHERE RouteID = " + routeID " AND Date = " + date 
+            query = "SELECT RouteID,Date FROM routes WHERE RouteID = " + routeID " AND Date = " + date
             self.cur.execute(query)
             if self.cur.rowcount == 0:
                 routeID = self.getLastRouteId()
