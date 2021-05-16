@@ -18,12 +18,14 @@ in_file = open("maps_template.html", "rt") # Read html template
 template = in_file.read()
 in_file.close()
 
+
 def generateHtml(latlng):
     global template
     output = Template(template).substitute(lat=latlng[0], lng=latlng[1], timefix=latlng[2])
     out_file = open("/var/www/html/gps/index.html", "wt")
     out_file.write(output)
     out_file.close()
+
 
 def readString():
     while 1:
@@ -32,10 +34,12 @@ def readString():
         line = ser.readline().decode("utf-8") # Read the entire string
         return line
 
+
 def getTime(string,format,returnFormat):
     return time.strftime(returnFormat, time.strptime(string, format)) # Convert date and time to a nice printable format
 
-def getLatLng(latString, latDir, lngString, lngDir, fixTimeString, db):
+
+def getLatLng(latString, latDir, lngString, lngDir, fixTimeString):
     lat = latString[:2].lstrip('0') + "." + "%.4s" % str(float(latString[2:])*1.0/60.0).lstrip("0.")
     lng = lngString[:3].lstrip('0') + "." + "%.4s" % str(float(lngString[3:])*1.0/60.0).lstrip("0.")
 
@@ -45,10 +49,11 @@ def getLatLng(latString, latDir, lngString, lngDir, fixTimeString, db):
     if lngDir == 'W':
        lng = '-' + lng
 
-    db.saveCoordinate(fixTimeString, lat, lng)
+    dblib.saveCoordinate(fixTimeString, lat, lng)
     return lat,lng,fixTimeString
 
-def printRMC(lines, db):
+
+def printRMC(lines):
     global counter
     print("========================================RMC========================================")
     fixTime = ''
@@ -71,7 +76,8 @@ def printRMC(lines, db):
         counter = 0
         generateHtml(latlng)
 
-def printGGA(lines, db):
+
+def printGGA(lines):
     print("========================================GGA========================================")
 
     fixTime = ''
@@ -87,7 +93,8 @@ def printGGA(lines, db):
     print("Time in seconds since last DGPS update:", lines[13])
     print("DGPS station ID number:", lines[14].partition("*")[0])
 
-def printGSA(lines, db):
+
+def printGSA(lines):
     print("========================================GSA========================================")
 
     print("Selection of 2D or 3D fix (A=Auto,M=Manual):", lines[1])
@@ -100,6 +107,7 @@ def printGSA(lines, db):
     print("\nPDOP", lines[15])
     print("HDOP", lines[16])
     print("VDOP", lines[17].partition("*")[0])
+
 
 def printGSV(lines, db):
     if lines[2] == '1': # First sentence
@@ -116,7 +124,8 @@ def printGSV(lines, db):
         print("Azimuth (deg):", lines[6+i*4].lstrip("0"))
         print("SNR (higher is better):", lines[7+i*4].partition("*")[0])
 
-def printGLL(lines, db):
+
+def printGLL(lines):
     print("========================================GLL========================================")
 
     fixTime = ''
@@ -129,7 +138,8 @@ def printGLL(lines, db):
     if lines[7].partition("*")[0]: # Extra field since NMEA standard 2.3
         print("Mode (A=Autonomous, D=Differential, E=Estimated, N=Data not valid):", lines[7].partition("*")[0])
 
-def printVTG(lines, db):
+
+def printVTG(lines):
     print("========================================VTG========================================")
 
     print("True Track made good (deg):", lines[1], lines[2])
@@ -138,6 +148,7 @@ def printVTG(lines, db):
     print("Ground speed (km/h):", lines[7], lines[8].partition("*")[0])
     if lines[9].partition("*")[0]: # Extra field since NMEA standard 2.3
         print("Mode (A=Autonomous, D=Differential, E=Estimated, N=Data not valid):", lines[9].partition("*")[0])
+
 
 def checksum(line):
     checkString = line.partition("*")
@@ -160,29 +171,30 @@ def checksum(line):
         print(hex(checksum), "!=", hex(inputChecksum))
         return False
 
+
 if __name__ == '__main__':
-    db = dblib()
-    db.startNewRoute()
- 
+
+    dblib.startNewRoute()
+
     while 1:
         line = readString()
         lines = line.split(",")
         if checksum(line):
             if lines[0][2:] == "RMC":
-                printRMC(lines, db)
+                printRMC(lines)
                 pass
             elif lines[0][2:] == "GGA":
-                printGGA(lines, db)
+                printGGA(lines)
                 pass
             elif lines[0][2:] == "GSA":
                 pass
             elif lines[0][2:] == "GSV":
                 pass
             elif lines[0][2:] == "GLL":
-                printGLL(lines, db)
+                printGLL(lines)
                 pass
             elif lines[0][2:] == "VTG":
-                printVTG(lines, db)
+                printVTG(lines)
                 pass
             else:
                 print("\n\nUnknown type:", lines[0], "\n\n")
