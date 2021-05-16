@@ -14,25 +14,30 @@ import pymysql
 #    *  route
 #########################
 
+
 class dblib:
-    def __init__(self, dbFolder = None):
+    def __init__(self):
         self.connectToSql()
 
-	def getLastRouteId(self):
-	    if self.connected:
-                query = "SELECT * FROM routeId"
-                self.cur.execute(query)
-                return self.cur.fetchone()
-            else:
-                print("getLastRouteId: Not connected to DB")
 
-        def setNewRouteId(self, lastUsedRouteId):
-	    if self.connected:
-                newRouteId = lastUsedRouteId + 1
+    def getLastRouteId(self):
+        if self.connected:
+            query = "SELECT * FROM routeId"
+            self.cur.execute(query)
+            return self.cur.fetchone()
+        else:
+            print("getLastRouteId: Not connected to DB")
+
+
+    def setNewRouteId(self):
+        if self.connected:
+            lastUsedRouteId = getLastRouteId()
+            newRouteId = lastUsedRouteId + 1
             query = "UPDATE routeId SET route = " + newRouteId + " WHERE route = " + lastUsedRouteId
             self.cur.execute(query)
-            else:
-                print("setNewRouteId: Not connected to DB")
+        else:
+            print("setNewRouteId: Not connected to DB")
+
 
     def connectToSql(self):
         try:
@@ -44,6 +49,7 @@ class dblib:
             self.connected = False
             return False
 
+
     def getRoute(self, routeID):
         if self.connected:
             query = "SELECT * FROM routes WHERE RouteID ='" + routeID
@@ -52,7 +58,8 @@ class dblib:
         else:
             print("getRoute: Not connected to DB")
 
-    def insertCoordinate(self, date, latitude, longitude, isNewRoute = False):
+
+    def insertCoordinate(self, date, latitude, longitude):
         if self.connected:
             query = "SELECT RouteID,Date FROM routes WHERE RouteID = " + routeID " AND Date = " + date 
             self.cur.execute(query)
@@ -70,5 +77,10 @@ class dblib:
 def saveCoordinate(date, latitude, longitude):
     lib = DBlib()
     lib.insertCoordinate(date, latitude, longitude)
+
+
+def startNewRoute():
+    lib = DBlib()
+    lib.setNewRouteId()
 
 
