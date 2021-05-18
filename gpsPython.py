@@ -7,7 +7,6 @@ import sys
 import dblib
 from string import Template
 
-speed = '0.000'
 
 if os.geteuid() != 0: # Source: https://gist.github.com/davejamesmiller/1965559
     os.execvp("sudo", ["sudo"] + sys.argv)
@@ -16,7 +15,7 @@ ser = serial.Serial('/dev/ttyACM0',9600,timeout=1) # Open Serial port
 
 counter = 0 # Used to generate a html page every 10s
 
-in_file = open("maps_template.html", "rt") # Read html template
+in_file = open("/home/pi/gpsProject/RaspPiZeroGPS/maps_template.html", "rt") # Read html template
 template = in_file.read()
 in_file.close()
 
@@ -47,7 +46,7 @@ def getLatLng(latString, lngString, fixTimeString, altitudeStr='0'):
     return lat,lng
 
 
-def storeIntoDb(lat, latDir, lng, lngDir, fixTimeString):
+def storeIntoDb(lat, latDir, lng, lngDir, fixTimeString, speed):
     if latDir == 'S':
        lat = '-' + lat
 
@@ -66,7 +65,7 @@ def printRMC(lines):
     print("Status (A=OK,V=KO):", lines[2])
     latlng = getLatLng(lines[3],lines[5],fixTime)
     print("Lat,Long: ", latlng[0].replace('-',''), lines[4], ", ", latlng[1].replace('-',''),lines[6], sep='')
-    print("Speed (knots):", lines[7])
+    print("Ground Speed (knots):", lines[7])
     print("Track angle (deg):", lines[8])
     print("Magnetic variation: ", lines[10], end='')
     if len(lines) == 13: # The returned string will be either 12 or 13 - it will return 13 if NMEA standard used is above 2.3
@@ -75,7 +74,16 @@ def printRMC(lines):
     else:
         print(lines[11].partition("*")[0])
 
-    storeIntoDb(latlng[0], lines[4], latlng[1], lines[6], fixTime)
+    speedKnots = round(float(lines[7]), 2)
+    speedKph = round(speedKnots * 1.852, 2)
+
+    # Do not store speed smaller than 1, as it is stationary
+    if (speedKph < 1.00):
+        speed = '0.00'
+    else:
+        speed = str(speedKph) 
+
+    storeIntoDb(latlng[0], lines[4], latlng[1], lines[6], fixTime, speed)
     #counter += 1
     #if counter == 10: # Generate HTML every 10s
     #    counter = 0
@@ -155,13 +163,6 @@ def printVTG(lines):
     if lines[9].partition("*")[0]: # Extra field since NMEA standard 2.3
         print("Mode (A=Autonomous, D=Differential, E=Estimated, N=Data not valid):", lines[9].partition("*")[0])
 
-    # Do not store speed smaller than 1, as it is stationary
-    speedF = round(float(speed), 2)
-    if (speedF < 1.00):
-        speed = '0.00'
-    else:
-        speed = str(speedF)
-
 
 def checksum(line):
     checkString = line.partition("*")
@@ -210,4 +211,5 @@ if __name__ == '__main__':
                 printVTG(lines)
                 pass
             else:
-                print("\n\nUnknown type:", lines[0], "\n\n")
+                print("Unknown type:", lines[0])
+
