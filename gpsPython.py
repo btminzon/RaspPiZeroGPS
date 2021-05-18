@@ -7,6 +7,8 @@ import sys
 import dblib
 from string import Template
 
+speed = '0.000'
+
 if os.geteuid() != 0: # Source: https://gist.github.com/davejamesmiller/1965559
     os.execvp("sudo", ["sudo"] + sys.argv)
 
@@ -19,9 +21,9 @@ template = in_file.read()
 in_file.close()
 
 
-def generateHtml(latlng):
+def generateHtml(latlng, timef):
     global template
-    output = Template(template).substitute(lat=latlng[0], lng=latlng[1], timefix=latlng[2])
+    output = Template(template).substitute(lat=latlng[0], lng=latlng[1], timefix=timef)
     out_file = open("/var/www/html/gps/index.html", "wt")
     out_file.write(output)
     out_file.close()
@@ -39,18 +41,20 @@ def getTime(string,format,returnFormat):
     return time.strftime(returnFormat, time.strptime(string, format)) # Convert date and time to a nice printable format
 
 
-def getLatLng(latString, latDir, lngString, lngDir, fixTimeString):
+def getLatLng(latString, lngString, fixTimeString, altitudeStr='0'):
     lat = latString[:2].lstrip('0') + "." + "%.4s" % str(float(latString[2:])*1.0/60.0).lstrip("0.")
     lng = lngString[:3].lstrip('0') + "." + "%.4s" % str(float(lngString[3:])*1.0/60.0).lstrip("0.")
+    return lat,lng
 
+
+def storeIntoDb(lat, latDir, lng, lngDir, fixTimeString):
     if latDir == 'S':
        lat = '-' + lat
 
     if lngDir == 'W':
        lng = '-' + lng
 
-    dblib.saveCoordinate(fixTimeString, lat, lng)
-    return lat,lng,fixTimeString
+    dblib.saveCoordinate(fixTimeString, lat, lng, speed)
 
 
 def printRMC(lines):
@@ -60,7 +64,7 @@ def printRMC(lines):
     fixTime = ''.join(getTime(lines[1]+lines[9], "%H%M%S.%W%d%m%y", "%a %b %d %H:%M:%S %Y")) # added a %W to ignore 00  str
     print("Fix taken at:" + fixTime, "UTC")
     print("Status (A=OK,V=KO):", lines[2])
-    latlng = getLatLng(lines[3],lines[4],lines[5],lines[6],fixTime)
+    latlng = getLatLng(lines[3],lines[5],fixTime)
     print("Lat,Long: ", latlng[0].replace('-',''), lines[4], ", ", latlng[1].replace('-',''),lines[6], sep='')
     print("Speed (knots):", lines[7])
     print("Track angle (deg):", lines[8])
@@ -71,10 +75,11 @@ def printRMC(lines):
     else:
         print(lines[11].partition("*")[0])
 
-    counter += 1
-    if counter == 10: # Generate HTML every 10s
-        counter = 0
-        generateHtml(latlng)
+    storeIntoDb(latlng[0], lines[4], latlng[1], lines[6], fixTime)
+    #counter += 1
+    #if counter == 10: # Generate HTML every 10s
+    #    counter = 0
+    #    generateHtml(latlng, fixTime)
 
 
 def printGGA(lines):
@@ -83,7 +88,7 @@ def printGGA(lines):
     fixTime = ''
     fixTime = ''.join(getTime(lines[1], "%H%M%S.%f", "%H:%M:%S"))
     print("Fix taken at:", fixTime, "UTC")
-    latlng = getLatLng(lines[2],lines[3],lines[4],lines[5],fixTime)
+    latlng = getLatLng(lines[2],lines[4],fixTime, lines[9])
     print("Lat,Long: ", latlng[0].replace('-',''), lines[3], ", ", latlng[1].replace('-',''), lines[5], sep='')
     print("Fix quality (0 = invalid, 1 = fix, 2..8):", lines[6])
     print("Satellites:", lines[7].lstrip("0"))
@@ -92,7 +97,7 @@ def printGGA(lines):
     print("Height of geoid: ", lines[11],lines[12],sep="")
     print("Time in seconds since last DGPS update:", lines[13])
     print("DGPS station ID number:", lines[14].partition("*")[0])
-
+    dblib.saveAltitude(fixTime, lines[9])
 
 def printGSA(lines):
     print("========================================GSA========================================")
@@ -131,7 +136,7 @@ def printGLL(lines):
     fixTime = ''
 
     fixTime = ''.join(getTime(lines[5], "%H%M%S.%f", "%H:%M:%S"))
-    latlng = getLatLng(lines[1],lines[2],lines[3],lines[4],fixTime)
+    latlng = getLatLng(lines[1],lines[3],fixTime)
     print("Lat,Long: ", latlng[0].replace('-',''), lines[2], ", ", latlng[1].replace('-',''), lines[4], sep='')
     print("Fix taken at:", fixTime, "UTC")
     print("Status (A=OK,V=KO):", lines[6])
@@ -146,8 +151,16 @@ def printVTG(lines):
     print("Magnetic track made good (deg):", lines[3], lines[4])
     print("Ground speed (knots):", lines[5], lines[6])
     print("Ground speed (km/h):", lines[7], lines[8].partition("*")[0])
+    speed = lines[7]
     if lines[9].partition("*")[0]: # Extra field since NMEA standard 2.3
         print("Mode (A=Autonomous, D=Differential, E=Estimated, N=Data not valid):", lines[9].partition("*")[0])
+
+    # Do not store speed smaller than 1, as it is stationary
+    speedF = round(float(speed), 2)
+    if (speedF < 1.00):
+        speed = '0.00'
+    else:
+        speed = str(speedF)
 
 
 def checksum(line):
