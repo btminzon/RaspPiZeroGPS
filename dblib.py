@@ -65,6 +65,26 @@ class dblib:
             print("getRoute: Not connected to DB")
 
 
+    def getlatlngalt(self, routeID):
+        if self.connected: # Return in the format Lon, Lat, Alt
+            query = "SELECT Longitude, Latitude, Altitude FROM routes WHERE RouteID = \'" + str(routeID) + "\'"
+            self.cur.execute(query)
+            return self.cur.fetchall()
+        else:
+            print("getRoute: Not connected to DB")
+
+
+    def findRouteId(self, date):
+        if self.connected:
+            query = "SELECT distinct(RouteID) from routes WHERE Date like \'%%" + str(date) + "%%\'"
+            self.cur.execute(query)
+            routeId = self.cur.fetchall()[0][0]
+            print("findRouteId: returned items: " + str(routeId))
+            return routeId
+        else:
+            print("findRouteId: Not connected to DB")
+
+
     def insertCoordinate(self, date, latitude, longitude, speed):
         if self.connected:
             routeID = self.getLastRouteId()
@@ -104,4 +124,12 @@ def startNewRoute():
 def saveAltitude(date, altitude):
     lib = dblib()
     lib.insertAltitude(date, altitude)
+
+
+def getCoordinates(date):
+    lib = dblib()
+    routeId = lib.findRouteId(date)
+    print("RouteID found = " + str(routeId))
+    return lib.getlatlngalt(routeId)
+
 
