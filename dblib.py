@@ -1,8 +1,11 @@
 import pymysql
 
 ########################
+# DB: routeDb
+#
 #Tables:
-#   routes
+#
+#   Table: routes
 #   Colums:
 #    *  RouteID
 #    *  Date
@@ -10,8 +13,15 @@ import pymysql
 #       Longitude
 #       Altitude
 #       Speed
+#       SegmentID
 #
-#   routeId
+#   Table: segmentDetailed
+#   Columns:
+#    *  Segment
+#    *  RouteID
+#       DistanceFromPrevious
+#
+#   Table: routeId
 #   Columns
 #    *  route
 #########################
