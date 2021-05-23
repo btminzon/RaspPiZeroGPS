@@ -1,4 +1,5 @@
 import pymysql
+from geopy import distance
 
 ########################
 # DB: routeDb
@@ -53,7 +54,7 @@ class dblib:
 
     def setSegmentId(self, segmentId, routeId):
         if self.connected:
-            query = "INSERT INTO segmentDetailed (Segment, RouteID) VALUES (" + str(segmentId) + ", \'" + str(routeId) + "\')"
+            query = "INSERT INTO segmentDetailed (Segment,RouteID) VALUES (\'" + str(segmentId) + "\',\'" + str(routeId) + "\')"
             self.cur.execute(query)
             self.con.commit()
         else:
@@ -127,15 +128,29 @@ class dblib:
             print("findRouteId: Not connected to DB")
 
 
+    def getDistanceFromPrevious(self, routeId, lat, lng):
+        if self.connected:
+            segment = self.getLastSegmentId(routeId)
+            if segment == 0:
+                return 0
+            else:
+                query = "SELECT Longitude, Latitude FROM routes WHERE RouteID = \'" + str(routeId) + "\' AND Segment = \'" + str(segment) + "\'"
+                self.cur.execute(query)
+                previous = self.cur.fetchone()
+                actual = (lng, lat)
+                return round(distance.distance(previous, actual).km, 3)
+
     def insertCoordinate(self, date, latitude, longitude, speed):
         if self.connected:
             routeID = self.getLastRouteId()
             query = "SELECT RouteID,Date FROM routes WHERE RouteID = \'" + str(routeID) + "\' AND Date = \'" + str(date) + "\'"
             self.cur.execute(query)
             if self.cur.rowcount == 0:
+                distanceFromPreviousSegment  = self.getDistanceFromPrevious(routeID, latitude, longitude)
                 segmentID = self.updateSegmentId(routeID)
-                query = "INSERT INTO routes (RouteID, Date, Latitude, Longitude, Speed, Segment) VALUES (\'" + str(routeID) +  "\',\'" + \
-                    str(date) + "\',\'" + str(latitude) + "\',\'" + str(longitude) + "\',\'" + str(speed) + "\',\'" + str(segmentID) + "\')"
+                query = "INSERT INTO routes (RouteID, Date, Latitude, Longitude, Speed, Segment, DistanceFromPreviousSegment) VALUES (\'" + \
+                    str(routeID) +  "\',\'" + str(date) + "\',\'" + str(latitude) + "\',\'" + str(longitude) + "\',\'" + str(speed) + "\',\'" + \
+                    str(segmentID) + "\',\'" + str(distanceFromPreviousSegment) + "\')"
                 self.cur.execute(query)
                 self.con.commit()
             else:
