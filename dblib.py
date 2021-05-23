@@ -13,13 +13,13 @@ import pymysql
 #       Longitude
 #       Altitude
 #       Speed
-#       SegmentID
+#       Segment
+#       DistanceFromPreviousSegment
 #
 #   Table: segmentDetailed
 #   Columns:
 #    *  Segment
 #    *  RouteID
-#       DistanceFromPrevious
 #
 #   Table: routeId
 #   Columns
@@ -134,7 +134,7 @@ class dblib:
             self.cur.execute(query)
             if self.cur.rowcount == 0:
                 segmentID = self.updateSegmentId(routeID)
-                query = "INSERT INTO routes (RouteID, Date, Latitude, Longitude, Speed, SegmentID) VALUES (\'" + str(routeID) +  "\',\'" + \
+                query = "INSERT INTO routes (RouteID, Date, Latitude, Longitude, Speed, Segment) VALUES (\'" + str(routeID) +  "\',\'" + \
                     str(date) + "\',\'" + str(latitude) + "\',\'" + str(longitude) + "\',\'" + str(speed) + "\',\'" + str(segmentID) + "\')"
                 self.cur.execute(query)
                 self.con.commit()
