@@ -53,7 +53,7 @@ class dblib:
 
     def setSegmentId(self, segmentId, routeId):
         if self.connected:
-            query = "INSERT INTO segmentDetailed (Segment, RouteID) VALUES (" + str(segmentId) + ", \'" + str(newRouteId) + "\')"
+            query = "INSERT INTO segmentDetailed (Segment, RouteID) VALUES (" + str(segmentId) + ", \'" + str(routeId) + "\')"
             self.cur.execute(query)
             self.con.commit()
         else:
@@ -62,9 +62,11 @@ class dblib:
 
     def updateSegmentId(self, routeId):
         if self.connected:
-             lastSegment = getLastSegmentId(routeId)
+             lastSegment = self.getLastSegmentId(routeId)
              newSegment = int(lastSegment) + 1
-             self.setSegmentId(newSegment, routeId)
+             query = "UPDATE segmentDetailed SET Segment = \'" + str(newSegment) + "\' WHERE RouteID = \'" + str(routeId) + "\'"
+             self.cur.execute(query)
+             self.con.commit()
              return newSegment
 
         else:
