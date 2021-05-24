@@ -138,7 +138,7 @@ class dblib:
                 self.cur.execute(query)
                 previous = self.cur.fetchone()
                 actual = (lng, lat)
-                return round(distance.distance(previous, actual).km, 3)
+                return round(distance.distance(previous, actual).km, 4)
 
     def insertCoordinate(self, date, latitude, longitude, speed):
         if self.connected:
