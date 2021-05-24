@@ -9,13 +9,9 @@ def createKml(date):
     kml.newlinestring(name='Route', description=date, coords=coordinates)
     filename = 'Route_' + date + '.kml'
     kml.save(filename)
-    print("File " + filename + " created succesfully!")
+    print("File " + filename + " created successfully!")
 
 
 if __name__ == '__main__':
-   print("Arg size: "+ str(len(sys.argv)))
-   print("0: " + str(sys.argv[0]) + " 1: " + str(sys.argv[1]))
-   date = sys.argv[1]
-   createKml(date)
-
-
+    date = sys.argv[1]
+    createKml(date)

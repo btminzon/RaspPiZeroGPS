@@ -1,13 +1,14 @@
 import pymysql
 from geopy import distance
 
+
 ########################
 # DB: routeDb
 #
-#Tables:
+# Tables:
 #
 #   Table: routes
-#   Colums:
+#   Columns:
 #    *  RouteID
 #    *  Date
 #       Latitude
@@ -28,11 +29,10 @@ from geopy import distance
 #########################
 
 
-class dblib:
+class Dblib:
 
     def __init__(self):
         self.connectToSql()
-
 
     def getLastRouteId(self):
         if self.connected:
@@ -42,7 +42,6 @@ class dblib:
         else:
             print("getLastRouteId: Not connected to DB")
 
-
     def getLastSegmentId(self, routeId):
         if self.connected:
             query = "SELECT Segment from segmentDetailed WHERE RouteID = \'" + str(routeId) + "\'"
@@ -51,41 +50,40 @@ class dblib:
         else:
             print("getLastSegmentId: Not connected to DB")
 
-
     def setSegmentId(self, segmentId, routeId):
         if self.connected:
-            query = "INSERT INTO segmentDetailed (Segment,RouteID) VALUES (\'" + str(segmentId) + "\',\'" + str(routeId) + "\')"
+            query = "INSERT INTO segmentDetailed (Segment,RouteID) VALUES (\'" + str(segmentId) + "\',\'" + str(
+                routeId) + "\')"
             self.cur.execute(query)
             self.con.commit()
         else:
             print("setSegmentId: Not connected to DB")
 
-
     def updateSegmentId(self, routeId):
         if self.connected:
-             lastSegment = self.getLastSegmentId(routeId)
-             newSegment = int(lastSegment) + 1
-             query = "UPDATE segmentDetailed SET Segment = \'" + str(newSegment) + "\' WHERE RouteID = \'" + str(routeId) + "\'"
-             self.cur.execute(query)
-             self.con.commit()
-             return newSegment
+            lastSegment = self.getLastSegmentId(routeId)
+            newSegment = int(lastSegment) + 1
+            query = "UPDATE segmentDetailed SET Segment = \'" + str(newSegment) + "\' WHERE RouteID = \'" + str(
+                routeId) + "\'"
+            self.cur.execute(query)
+            self.con.commit()
+            return newSegment
 
         else:
             print("updateSegmentId: Not connected to DB")
-
 
     def setNewRoute(self):
         if self.connected:
             lastUsedRouteId = self.getLastRouteId()
             newRouteId = int(lastUsedRouteId) + 1
             print("New routeId: ", newRouteId)
-            query = "UPDATE routeId SET route = \'" + str(newRouteId) + "\' WHERE route = \'" + str(lastUsedRouteId) + "\'"
+            query = "UPDATE routeId SET route = \'" + str(newRouteId) + "\' WHERE route = \'" + str(
+                lastUsedRouteId) + "\'"
             self.cur.execute(query)
             self.con.commit()
             self.setSegmentId(0, newRouteId)
         else:
             print("setNewRouteId: Not connected to DB")
-
 
     def connectToSql(self):
         try:
@@ -98,7 +96,6 @@ class dblib:
             print("Failed to connect to DB")
             return False
 
-
     def getRoute(self, routeID):
         if self.connected:
             query = "SELECT * FROM routes WHERE RouteID = \'" + str(routeID) + "\'"
@@ -107,15 +104,13 @@ class dblib:
         else:
             print("getRoute: Not connected to DB")
 
-
     def getlatlngalt(self, routeID):
-        if self.connected: # Return in the format Lon, Lat, Alt
+        if self.connected:  # Return in the format Lon, Lat, Alt
             query = "SELECT Longitude, Latitude, Altitude FROM routes WHERE RouteID = \'" + str(routeID) + "\'"
             self.cur.execute(query)
             return self.cur.fetchall()
         else:
             print("getRoute: Not connected to DB")
-
 
     def findRouteId(self, date):
         if self.connected:
@@ -127,14 +122,14 @@ class dblib:
         else:
             print("findRouteId: Not connected to DB")
 
-
     def getDistanceFromPrevious(self, routeId, lat, lng):
         if self.connected:
             segment = self.getLastSegmentId(routeId)
             if segment == 0:
                 return 0
             else:
-                query = "SELECT Longitude, Latitude FROM routes WHERE RouteID = \'" + str(routeId) + "\' AND Segment = \'" + str(segment) + "\'"
+                query = "SELECT Longitude, Latitude FROM routes WHERE RouteID = \'" + str(
+                    routeId) + "\' AND Segment = \'" + str(segment) + "\'"
                 self.cur.execute(query)
                 previous = self.cur.fetchone()
                 actual = (lng, lat)
@@ -143,51 +138,52 @@ class dblib:
     def insertCoordinate(self, date, latitude, longitude, speed):
         if self.connected:
             routeID = self.getLastRouteId()
-            query = "SELECT RouteID,Date FROM routes WHERE RouteID = \'" + str(routeID) + "\' AND Date = \'" + str(date) + "\'"
+            query = "SELECT RouteID,Date FROM routes WHERE RouteID = \'" + str(routeID) + "\' AND Date = \'" + str(
+                date) + "\'"
             self.cur.execute(query)
             if self.cur.rowcount == 0:
-                distanceFromPreviousSegment  = self.getDistanceFromPrevious(routeID, latitude, longitude)
+                distanceFromPreviousSegment = self.getDistanceFromPrevious(routeID, latitude, longitude)
                 segmentID = self.updateSegmentId(routeID)
-                query = "INSERT INTO routes (RouteID, Date, Latitude, Longitude, Speed, Segment, DistanceFromPreviousSegment) VALUES (\'" + \
-                    str(routeID) +  "\',\'" + str(date) + "\',\'" + str(latitude) + "\',\'" + str(longitude) + "\',\'" + str(speed) + "\',\'" + \
-                    str(segmentID) + "\',\'" + str(distanceFromPreviousSegment) + "\')"
+                query = "INSERT INTO routes (RouteID, Date, Latitude, Longitude, Speed, Segment, \
+                DistanceFromPreviousSegment) VALUES (\'" + str(routeID) + "\',\'" + str(date) + \
+                        "\',\'" + str(latitude) + "\',\'" + str(longitude) + "\',\'" + str(speed) + \
+                        "\',\'" + str(segmentID) + "\',\'" + str(distanceFromPreviousSegment) + "\')"
                 self.cur.execute(query)
                 self.con.commit()
             else:
                 print("RouteID " + str(routeID) + " already inserted with Date = " + str(date))
 
-
     def insertAltitude(self, date, altitude):
         if self.connected:
             routeID = self.getLastRouteId()
-            query = "SELECT * FROM routes WHERE RouteID = \'" + str(routeID) + "\' AND Date like \'%%" + str(date) + "%%\'"
+            query = "SELECT * FROM routes WHERE RouteID = \'" + str(routeID) + "\' AND Date like \'%%" + str(
+                date) + "%%\'"
             self.cur.execute(query)
             if self.cur.rowcount == 1:
-               query = "UPDATE routes SET Altitude = \'" + str(altitude) + "\' WHERE RouteID = \'" + str(routeID) + "\' AND Date like \'%%" + \
+                query = "UPDATE routes SET Altitude = \'" + str(altitude) + "\' WHERE RouteID = \'" + str(
+                    routeID) + "\' AND Date like \'%%" + \
                         str(date) + "%%\'"
-               self.cur.execute(query)
-               self.con.commit()
+                self.cur.execute(query)
+                self.con.commit()
 
 
 def saveCoordinate(date, latitude, longitude, speed):
-    lib = dblib()
+    lib = Dblib()
     lib.insertCoordinate(date, latitude, longitude, speed)
 
 
 def startNewRoute():
-    lib = dblib()
-    return  lib.setNewRoute()
+    lib = Dblib()
+    return lib.setNewRoute()
 
 
 def saveAltitude(date, altitude):
-    lib = dblib()
+    lib = Dblib()
     lib.insertAltitude(date, altitude)
 
 
 def getCoordinates(date):
-    lib = dblib()
+    lib = Dblib()
     routeId = lib.findRouteId(date)
     print("RouteID found = " + str(routeId))
     return lib.getlatlngalt(routeId)
-
-
