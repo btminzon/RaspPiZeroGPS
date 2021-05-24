@@ -41,8 +41,8 @@ def getTime(string,format,returnFormat):
 
 
 def getLatLng(latString, lngString, fixTimeString):
-    lat = latString[:2].lstrip('0') + "." + "%.4s" % str(float(latString[2:])*1.0/60.0).lstrip("0.")
-    lng = lngString[:3].lstrip('0') + "." + "%.4s" % str(float(lngString[3:])*1.0/60.0).lstrip("0.")
+    lat = latString[:2].lstrip('0') + "." + "%.5s" % str(float(latString[2:])*1.0/60.0).lstrip("0.")
+    lng = lngString[:3].lstrip('0') + "." + "%.5s" % str(float(lngString[3:])*1.0/60.0).lstrip("0.")
     return lat,lng
 
 
