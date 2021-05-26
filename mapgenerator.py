@@ -20,8 +20,8 @@ def createKml(date):
 
 def generateHtml(date):
     global template
-    latlng = dblib.getCoordinates(date)
-    output = Template(template).substitute(latlng=latlng)
+    lnglat = dblib.getCoordinates(date)
+    output = Template(template).substitute(lnglat=lnglat)
     out_file = open("/var/www/html/gps/index.html", "wt")
     out_file.write(output)
     out_file.close()
@@ -29,9 +29,9 @@ def generateHtml(date):
 
 if __name__ == '__main__':
     date = sys.argv[1]
-    if sys.argv[2] is 'kml':
+    if sys.argv[2] == 'kml':
         createKml(date)
-    elif sys.argv[2] is 'map':
+    elif sys.argv[2] == 'map':
         generateHtml(date)
     else:
         print("Option " + sys.argv[2] + " invalid")

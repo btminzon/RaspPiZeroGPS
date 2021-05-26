@@ -13,7 +13,7 @@
     <title>RaspberryPi Zero GPS</title>
   </head>
   <body>
-    <h2>Last fix: $timefix UTC</h2>
+    <h2>Route</h2>
     <div id="map" class="map"></div>
     <div id="popup" class="ol-popup">
       <a href="#" id="popup-closer" class="ol-popup-closer"></a>
@@ -28,7 +28,7 @@
           })
         ],
         view: new ol.View({
-          center: ol.proj.fromLonLat([$lng, $lat]),
+          center: ol.proj.fromLonLat([$lnglat[0][0], $lnglat[0][1]]),
           zoom: 16
         })
       });
@@ -37,7 +37,7 @@
       for (i = 0; i < coordinates.length; i++) {
       coordinates.push( new ol.Feature({
           geometry: new ol.geom.Point(ol.proj.fromLonLat([coordinates[i][0], coordinates[i][1]]))
-          });
+          }));
       }
 
       var vectorSource = new ol.source.Vector({
@@ -75,17 +75,6 @@
        return false;
     };
 
-<!--    map.on('singleclick', function (event) {-->
-<!--      if (map.hasFeatureAtPixel(event.pixel) === true) {-->
-<!--         var coordinate = event.coordinate;-->
-
-<!--         content.innerHTML = '<b>Last location seen</b><br />$lat $lng';-->
-<!--         overlay.setPosition(coordinate);-->
-<!--      } else {-->
-<!--         overlay.setPosition(undefined);-->
-<!--         closer.blur();-->
-<!--      }-->
-<!--    });    -->
     </script>
  </body>
 </html>
