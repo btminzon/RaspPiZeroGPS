@@ -5,27 +5,11 @@ import time
 import os
 import sys
 import dblib
-from string import Template
 
 if os.geteuid() != 0:  # Source: https://gist.github.com/davejamesmiller/1965559
     os.execvp("sudo", ["sudo"] + sys.argv)
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)  # Open Serial port
-
-counter = 0  # Used to generate a html page every 10s
-
-in_file = open("/home/pi/gpsProject/RaspPiZeroGPS/maps_template.html", "rt")  # Read html template
-template = in_file.read()
-in_file.close()
-
-
-def generateHtml(latlng, timef):
-    global template
-    output = Template(template).substitute(lat=latlng[0], lng=latlng[1], timefix=timef)
-    out_file = open("/var/www/html/gps/index.html", "wt")
-    out_file.write(output)
-    out_file.close()
-
 
 def readString():
     while 1:
@@ -57,7 +41,6 @@ def storeIntoDb(lat, latDir, lng, lngDir, fixTimeString, speed):
 
 
 def printRMC(lines):
-    global counter
     print("========================================RMC========================================")
     fixTime = ''
     fixTime = ''.join(
@@ -86,10 +69,6 @@ def printRMC(lines):
         speed = str(speedKph)
 
     storeIntoDb(latlng[0], lines[4], latlng[1], lines[6], fixTime, speed)
-    # counter += 1
-    # if counter == 10: # Generate HTML every 10s
-    #    counter = 0
-    #    generateHtml(latlng, fixTime)
 
 
 def printGGA(lines):
