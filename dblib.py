@@ -34,6 +34,17 @@ class Dblib:
     def __init__(self):
         self.connectToSql()
 
+    def connectToSql(self):
+        try:
+            self.con = pymysql.connect(host="localhost", user='gpsuser', passwd='##gps123', db="routeDb")
+            self.cur = self.con.cursor()
+            self.connected = True
+            return True
+        except:
+            self.connected = False
+            print("Failed to connect to DB")
+            return False
+
     def getLastRouteId(self):
         if self.connected:
             query = "SELECT route FROM routeId"
@@ -49,52 +60,6 @@ class Dblib:
             return self.cur.fetchone()[0]
         else:
             print("getLastSegmentId: Not connected to DB")
-
-    def setSegmentId(self, segmentId, routeId):
-        if self.connected:
-            query = "INSERT INTO segmentDetailed (Segment,RouteID) VALUES (\'" + str(segmentId) + "\',\'" + str(
-                routeId) + "\')"
-            self.cur.execute(query)
-            self.con.commit()
-        else:
-            print("setSegmentId: Not connected to DB")
-
-    def updateSegmentId(self, routeId):
-        if self.connected:
-            lastSegment = self.getLastSegmentId(routeId)
-            newSegment = int(lastSegment) + 1
-            query = "UPDATE segmentDetailed SET Segment = \'" + str(newSegment) + "\' WHERE RouteID = \'" + str(
-                routeId) + "\'"
-            self.cur.execute(query)
-            self.con.commit()
-            return newSegment
-
-        else:
-            print("updateSegmentId: Not connected to DB")
-
-    def setNewRoute(self):
-        if self.connected:
-            lastUsedRouteId = self.getLastRouteId()
-            newRouteId = int(lastUsedRouteId) + 1
-            print("New routeId: ", newRouteId)
-            query = "UPDATE routeId SET route = \'" + str(newRouteId) + "\' WHERE route = \'" + str(
-                lastUsedRouteId) + "\'"
-            self.cur.execute(query)
-            self.con.commit()
-            self.setSegmentId(float("{:.4f}".format(0)), newRouteId)
-        else:
-            print("setNewRouteId: Not connected to DB")
-
-    def connectToSql(self):
-        try:
-            self.con = pymysql.connect(host="localhost", user='gpsuser', passwd='##gps123', db="routeDb")
-            self.cur = self.con.cursor()
-            self.connected = True
-            return True
-        except:
-            self.connected = False
-            print("Failed to connect to DB")
-            return False
 
     def getRoute(self, routeID):
         if self.connected:
@@ -112,15 +77,13 @@ class Dblib:
         else:
             print("getRoute: Not connected to DB")
 
-    def findRouteId(self, date):
+    def getdistancefromprevioussegment(self, routeId):
         if self.connected:
-            query = "SELECT distinct(RouteID) from routes WHERE Date like \'%%" + str(date) + "%%\'"
+            query = "SELECT DistanceFromPreviousSegment FROM routes WHERE RouteID = \'" + str(routeId) + "\'"
             self.cur.execute(query)
-            routeId = self.cur.fetchall()[0][0]
-            print("findRouteId: returned items: " + str(routeId))
-            return routeId
+            return print(self.cur.fetchall())
         else:
-            print("findRouteId: Not connected to DB")
+            print("getdistancefromprevioussegment: Not connected to DB")
 
     def getDistanceFromPrevious(self, routeId, lat, lng):
         if self.connected:
@@ -134,6 +97,50 @@ class Dblib:
                 previous = self.cur.fetchone()
                 actual = (lng, lat)
                 return round(distance.distance(previous, actual).km, 4)
+
+    def setSegmentId(self, segmentId, routeId):
+        if self.connected:
+            query = "INSERT INTO segmentDetailed (Segment,RouteID) VALUES (\'" + str(segmentId) + "\',\'" + str(
+                routeId) + "\')"
+            self.cur.execute(query)
+            self.con.commit()
+        else:
+            print("setSegmentId: Not connected to DB")
+
+    def setNewRoute(self):
+        if self.connected:
+            lastUsedRouteId = self.getLastRouteId()
+            newRouteId = int(lastUsedRouteId) + 1
+            print("New routeId: ", newRouteId)
+            query = "UPDATE routeId SET route = \'" + str(newRouteId) + "\' WHERE route = \'" + str(
+                lastUsedRouteId) + "\'"
+            self.cur.execute(query)
+            self.con.commit()
+            self.setSegmentId(float("{:.4f}".format(0)), newRouteId)
+        else:
+            print("setNewRouteId: Not connected to DB")
+
+    def updateSegmentId(self, routeId):
+        if self.connected:
+            lastSegment = self.getLastSegmentId(routeId)
+            newSegment = int(lastSegment) + 1
+            query = "UPDATE segmentDetailed SET Segment = \'" + str(newSegment) + "\' WHERE RouteID = \'" + str(
+                routeId) + "\'"
+            self.cur.execute(query)
+            self.con.commit()
+            return newSegment
+        else:
+            print("updateSegmentId: Not connected to DB")
+
+    def findRouteId(self, date):
+        if self.connected:
+            query = "SELECT distinct(RouteID) from routes WHERE Date like \'%%" + str(date) + "%%\'"
+            self.cur.execute(query)
+            routeId = self.cur.fetchall()[0][0]
+            print("findRouteId: returned items: " + str(routeId))
+            return routeId
+        else:
+            print("findRouteId: Not connected to DB")
 
     def insertCoordinate(self, date, latitude, longitude, speed):
         if self.connected:
@@ -187,3 +194,8 @@ def getCoordinates(date):
     routeId = lib.findRouteId(date)
     print("RouteID found = " + str(routeId))
     return lib.getlatlngalt(routeId)
+
+
+def getdistancebetweensegments(routeId):
+    lib = Dblib()
+    return lib.getdistancefromprevioussegment(routeId)
