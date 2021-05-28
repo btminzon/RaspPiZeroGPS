@@ -25,6 +25,7 @@ def generateHtml(date):
     out_file = open("/var/www/html/gps/index.html", "wt")
     out_file.write(output)
     out_file.close()
+    print("Map created successfully!")
 
 
 if __name__ == '__main__':

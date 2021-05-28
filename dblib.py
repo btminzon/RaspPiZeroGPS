@@ -81,7 +81,7 @@ class Dblib:
                 lastUsedRouteId) + "\'"
             self.cur.execute(query)
             self.con.commit()
-            self.setSegmentId(0, newRouteId)
+            self.setSegmentId(float("{:.4f}".format(0)), newRouteId)
         else:
             print("setNewRouteId: Not connected to DB")
 
@@ -126,7 +126,7 @@ class Dblib:
         if self.connected:
             segment = self.getLastSegmentId(routeId)
             if segment == 0:
-                return 0
+                return float("{:.4f}".format(0))
             else:
                 query = "SELECT Longitude, Latitude FROM routes WHERE RouteID = \'" + str(
                     routeId) + "\' AND Segment = \'" + str(segment) + "\'"
