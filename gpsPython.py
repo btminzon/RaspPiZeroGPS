@@ -5,11 +5,16 @@ import time
 import os
 import sys
 import dblib
+from geopy import distance
+
+flag = False
+previous = ''
 
 if os.geteuid() != 0:  # Source: https://gist.github.com/davejamesmiller/1965559
     os.execvp("sudo", ["sudo"] + sys.argv)
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)  # Open Serial port
+
 
 def readString():
     while 1:
@@ -31,6 +36,7 @@ def getLatLng(latString, lngString, fixTimeString):
 
 
 def storeIntoDb(lat, latDir, lng, lngDir, fixTimeString, speed):
+    global previous
     if latDir == 'S':
         lat = '-' + lat
 
@@ -38,6 +44,16 @@ def storeIntoDb(lat, latDir, lng, lngDir, fixTimeString, speed):
         lng = '-' + lng
 
     dblib.saveCoordinate(fixTimeString, lat, lng, speed)
+
+    actual = (lng, lat)
+
+    if previous != '':
+        dist = round(distance.distance(previous, actual).km, 4)
+        dblib.saveDistance(dist)
+    else:
+        dblib.saveDistance("{:.4f}".format(0))
+
+    previous = actual
 
 
 def printRMC(lines):

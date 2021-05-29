@@ -22,6 +22,7 @@ from geopy import distance
 #   Columns:
 #    *  Segment
 #    *  RouteID
+#       DistanceRun
 #
 #   Table: routeId
 #   Columns
@@ -132,6 +133,16 @@ class Dblib:
         else:
             print("updateSegmentId: Not connected to DB")
 
+    def updateDistance(self, dist):
+        if self.connected:
+            routeId = self.getLastRouteId()
+            query = "UPDATE segmentDetailed SET DistanceRun = \'" + str(dist) + "\' WHERE RouteID = \'" + str(
+                routeId) + "\'"
+            self.cur.execute(query)
+            self.con.commit()
+        else:
+            print("updateDistance: Not connected to DB")
+
     def findRouteId(self, date):
         if self.connected:
             query = "SELECT distinct(RouteID) from routes WHERE Date like \'%%" + str(date) + "%%\'"
@@ -174,14 +185,14 @@ class Dblib:
                 self.con.commit()
 
 
-def saveCoordinate(date, latitude, longitude, speed):
-    lib = Dblib()
-    lib.insertCoordinate(date, latitude, longitude, speed)
-
-
 def startNewRoute():
     lib = Dblib()
     return lib.setNewRoute()
+
+
+def saveCoordinate(date, latitude, longitude, speed):
+    lib = Dblib()
+    lib.insertCoordinate(date, latitude, longitude, speed)
 
 
 def saveAltitude(date, altitude):
@@ -189,16 +200,21 @@ def saveAltitude(date, altitude):
     lib.insertAltitude(date, altitude)
 
 
+def saveDistance(dist):
+    lib = Dblib()
+    lib.updateDistance(dist)
+
+
 def getCoordinates(date):
     lib = Dblib()
     routeId = lib.findRouteId(date)
-    print("RouteID found = " + str(routeId))
     return lib.getlatlngalt(routeId)
 
 
 def getdistancebetweensegments(routeId):
     lib = Dblib()
     return lib.getdistancefromprevioussegment(routeId)
+
 
 def getsegments(routeId):
     lib = Dblib()
