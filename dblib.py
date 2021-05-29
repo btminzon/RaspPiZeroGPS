@@ -81,7 +81,7 @@ class Dblib:
         if self.connected:
             query = "SELECT DistanceFromPreviousSegment FROM routes WHERE RouteID = \'" + str(routeId) + "\'"
             self.cur.execute(query)
-            return print(self.cur.fetchall())
+            return self.cur.fetchall()
         else:
             print("getdistancefromprevioussegment: Not connected to DB")
 
@@ -199,3 +199,7 @@ def getCoordinates(date):
 def getdistancebetweensegments(routeId):
     lib = Dblib()
     return lib.getdistancefromprevioussegment(routeId)
+
+def getsegments(routeId):
+    lib = Dblib()
+    lib.getLastSegmentId(routeId)
