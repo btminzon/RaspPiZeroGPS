@@ -5,10 +5,7 @@ import time
 import os
 import sys
 import dblib
-from geopy import distance
 
-flag = False
-previous = ''
 
 if os.geteuid() != 0:  # Source: https://gist.github.com/davejamesmiller/1965559
     os.execvp("sudo", ["sudo"] + sys.argv)
@@ -36,7 +33,6 @@ def getLatLng(latString, lngString, fixTimeString):
 
 
 def storeIntoDb(lat, latDir, lng, lngDir, fixTimeString, speed):
-    global previous
     if latDir == 'S':
         lat = '-' + lat
 
@@ -44,26 +40,18 @@ def storeIntoDb(lat, latDir, lng, lngDir, fixTimeString, speed):
         lng = '-' + lng
 
     dblib.saveCoordinate(fixTimeString, lat, lng, speed)
-
-    actual = (lng, lat)
-
-    if previous != '':
-        dist = round(distance.distance(previous, actual).km, 4)
-        dblib.saveDistance(dist)
-    else:
-        dblib.saveDistance("{:.4f}".format(0))
+    dblib.saveDistance(lat, lng)
 
     print("Coordinate: " + str(lat) + "," + str(lng))
     print("Speed: " + str(speed))
     print("Time Fix (UTC): " + str(fixTimeString))
-    previous = actual
 
 
 def printRMC(lines):
     #  print("========================================RMC========================================")
     fixTime = ''
     fixTime = ''.join(
-        getTime(lines[1] + lines[9], "%H%M%S.%W%d%m%y", "%a %b %d %H:%M:%S %Y"))  # added a %W to ignore 00  str
+        getTime(lines[1] + lines[9], "%H%M%S.%W%d%m%y", "%Y-%m-%d %H:%M:%S"))  # added a %W to ignore 00  str
     #  print("Fix taken at:" + fixTime, "UTC")
     #  print("Status (A=OK,V=KO):", lines[2])
     latlng = getLatLng(lines[3], lines[5], fixTime)
@@ -105,7 +93,7 @@ def printGGA(lines):
     #  print("Height of geoid: ", lines[11], lines[12], sep="")
     #  print("Time in seconds since last DGPS update:", lines[13])
     #  print("DGPS station ID number:", lines[14].partition("*")[0])
-    print("Altitude: " + line[9])
+    print("Altitude: " + lines[9])
     print(" ")
     dblib.saveAltitude(fixTime, lines[9])
 
