@@ -218,6 +218,11 @@ def saveDistance(latitude, longitude):
     lib.updateDistance(routeId, round(dist, 4))
 
 
+def updateDistance(routeId, dist):
+    lib = Dblib()
+    lib.updateDistance(routeId, round(dist, 4))
+
+
 def getCoordinates(date):
     lib = Dblib()
     routeId = lib.findRouteId(date)
