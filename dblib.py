@@ -107,7 +107,6 @@ class Dblib:
         else:
             print("getDistance: Not connected to DB")
 
-
     def setSegmentId(self, segmentId, routeId):
         if self.connected:
             query = "INSERT INTO segmentDetailed (Segment,RouteID) VALUES (\'" + str(segmentId) + "\',\'" + str(
@@ -126,8 +125,7 @@ class Dblib:
                 lastUsedRouteId) + "\'"
             self.cur.execute(query)
             self.con.commit()
-            self.setSegmentId(0, newRouteId)
-            self.updateDistance(float("{:.4f}".format(0)))
+            return newRouteId
         else:
             print("setNewRouteId: Not connected to DB")
 
@@ -143,9 +141,8 @@ class Dblib:
         else:
             print("updateSegmentId: Not connected to DB")
 
-    def updateDistance(self, dist):
+    def updateDistance(self, routeId, dist):
         if self.connected:
-            routeId = self.getLastRouteId()
             query = "UPDATE segmentDetailed SET DistanceRun = \'" + str(dist) + "\' WHERE RouteID = \'" + str(
                 routeId) + "\'"
             self.cur.execute(query)
@@ -197,7 +194,9 @@ class Dblib:
 
 def startNewRoute():
     lib = Dblib()
-    return lib.setNewRoute()
+    routeId = lib.setNewRoute()
+    lib.setSegmentId(0, routeId)
+    lib.updateDistance(routeId, float("{:.4f}".format(0)))
 
 
 def saveCoordinate(date, latitude, longitude, speed):
@@ -216,7 +215,7 @@ def saveDistance(latitude, longitude):
     currentDist = float(lib.getDistance(routeId))
     newDist = float(lib.getDistanceFromPrevious(routeId, latitude, longitude))
     dist = newDist + currentDist
-    lib.updateDistance("{:.4f}".format(dist))
+    lib.updateDistance(routeId, round(dist, 4))
 
 
 def getCoordinates(date):
