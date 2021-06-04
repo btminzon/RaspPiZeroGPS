@@ -89,15 +89,12 @@ class Dblib:
     def getDistanceFromPrevious(self, routeId, lat, lng):
         if self.connected:
             segment = self.getLastSegmentId(routeId)
-            if segment == 0:
-                return float("{:.4f}".format(0))
-            else:
-                query = "SELECT Longitude, Latitude FROM routes WHERE RouteID = \'" + str(
-                    routeId) + "\' AND Segment = \'" + str(segment) + "\'"
-                self.cur.execute(query)
-                previous = self.cur.fetchone()
-                actual = (lng, lat)
-                return round(distance.distance(previous, actual).km, 4)
+            query = "SELECT Longitude, Latitude FROM routes WHERE RouteID = \'" + str(
+                routeId) + "\' AND Segment = \'" + str(segment) + "\'"
+            self.cur.execute(query)
+            previous = self.cur.fetchone()
+            actual = (lng, lat)
+            return round(distance.distance(previous, actual).km, 4)
 
     def getDistance(self, routeId):
         if self.connected:
@@ -143,7 +140,7 @@ class Dblib:
 
     def updateDistance(self, routeId, dist):
         if self.connected:
-            query = "UPDATE segmentDetailed SET DistanceRun = \'" + str(dist) + "\' WHERE RouteID = \'" + str(
+            query = "UPDATE segmentDetailed SET DistanceRun = \'" + "{:.4f}".format(dist) + "\' WHERE RouteID = \'" + str(
                 routeId) + "\'"
             self.cur.execute(query)
             self.con.commit()
@@ -215,12 +212,12 @@ def saveDistance(latitude, longitude):
     currentDist = float(lib.getDistance(routeId))
     newDist = float(lib.getDistanceFromPrevious(routeId, latitude, longitude))
     dist = newDist + currentDist
-    lib.updateDistance(routeId, round(dist, 4))
+    lib.updateDistance(routeId, dist)
 
 
 def updateDistance(routeId, dist):
     lib = Dblib()
-    lib.updateDistance(routeId, round(dist, 4))
+    lib.updateDistance(routeId, dist)
 
 
 def getCoordinates(date):

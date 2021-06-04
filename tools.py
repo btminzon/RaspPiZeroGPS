@@ -6,7 +6,7 @@ def calculatedistance(routeId):
     sum = 0.0
     for i in dist:
         sum = sum + float(i[0])
-    print("Total Distance is: " + str("{:.3f}".format(sum)) + " Km")
+    print("Total Distance is: " + "{:.4f}".format(sum) + " Km")
     dblib.updateDistance(routeId, sum)
 
 if __name__ == '__main__':
