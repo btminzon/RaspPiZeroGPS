@@ -198,7 +198,10 @@ def saveCoordinate(date, latitude, longitude, speed):
     lastSegment = lib.getLastSegmentId(routeId)
     newSegment = int(lastSegment) + 1
     lib.updateSegmentId(routeId, newSegment)
-    dist = getdistanceFromPrevious(routeId, latitude, longitude)
+    if newSegment > 1:
+        dist = getdistanceFromPrevious(routeId, latitude, longitude)
+    else:
+        dist = 0.0000
     lib.insertCoordinate(routeId, date, latitude, longitude, speed, newSegment, dist)
 
 
@@ -243,4 +246,4 @@ def getdistanceFromPrevious(routeId, latitude, longitude):
 
 def getsegments(routeId):
     lib = Dblib()
-    lib.getLastSegmentId(routeId)
+    return lib.getLastSegmentId(routeId)
