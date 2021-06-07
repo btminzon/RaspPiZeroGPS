@@ -91,7 +91,7 @@ class Dblib:
             query = "SELECT Longitude, Latitude FROM routes WHERE RouteID = \'" + str(
                 routeId) + "\' AND Segment = \'" + str(segment) + "\'"
             self.cur.execute(query)
-            return self.cur.fetchone()
+            return self.cur.fetchall()
         else:
             print("getLastCoordinate: Not connected to DB")
 
@@ -238,7 +238,7 @@ def getdistanceFromPrevious(routeId, latitude, longitude):
     lib = Dblib()
     currentDist = float(lib.getDistance(routeId))
     segment = lib.getLastSegmentId(routeId)
-    last = lib.getLastCoordinate(routeId, segment)
+    last = lib.getLastCoordinate(routeId, segment-1)
     actual = (longitude, latitude)
     newDistance = round(distance.distance(last, actual).km, 4)
     return newDistance + currentDist
