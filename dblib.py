@@ -214,8 +214,10 @@ def saveAltitude(date, altitude):
 def saveDistance(latitude, longitude):
     lib = Dblib()
     routeId = lib.getLastRouteId()
+    currentDist = float(lib.getDistance(routeId))
     newDist = getdistanceFromPrevious(routeId, latitude, longitude)
-    lib.updateDistance(routeId, newDist)
+    dist = newDist + currentDist
+    lib.updateDistance(routeId, dist)
 
 
 def updateDistance(routeId, dist):
@@ -236,12 +238,11 @@ def getdistancebetweensegments(routeId):
 
 def getdistanceFromPrevious(routeId, latitude, longitude):
     lib = Dblib()
-    currentDist = float(lib.getDistance(routeId))
     segment = lib.getLastSegmentId(routeId)
     last = lib.getLastCoordinate(routeId, segment-1)
     actual = (longitude, latitude)
     newDistance = round(distance.distance(last, actual).km, 4)
-    return newDistance + currentDist
+    return newDistance
 
 
 def getsegments(routeId):
