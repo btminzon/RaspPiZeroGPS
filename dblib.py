@@ -42,9 +42,9 @@ class Dblib:
             self.cur = self.con.cursor()
             self.connected = True
             return True
-        except:
+        except Exception as e:
             self.connected = False
-            print("Failed to connect to DB")
+            print("Failed to connect to DB: " + {}.format(e))
             return False
 
     def getLastRouteId(self):
