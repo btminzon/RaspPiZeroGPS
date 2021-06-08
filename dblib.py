@@ -17,6 +17,7 @@ from geopy import distance
 #       Speed
 #       Segment
 #       DistanceFromPreviousSegment
+#       Satellites
 #
 #   Table: segmentDetailed
 #   Columns:
@@ -181,6 +182,22 @@ class Dblib:
         else:
             print("insertAltitude: Not connected to DB")
 
+    def insertSatellites(self, routeId, date, satellites):
+        if self.connected:
+            query = "SELECT * FROM routes WHERE RouteID = \'" + str(routeId) + "\' AND Date like \'%%" + str(
+                date) + "%%\'"
+            self.cur.execute(query)
+            if self.cur.rowcount == 1:
+                query = "UPDATE routes SET Satellites = \'" + str(satellites) + "\' WHERE RouteID = \'" + str(
+                    routeId) + "\' AND Date like \'%%" + \
+                        str(date) + "%%\'"
+                self.cur.execute(query)
+                self.con.commit()
+            else:
+                print("insertSatellites: there is no Coordinate inserted to update satellites")
+        else:
+            print("insertSatellites: Not connected to DB")
+
 
 def startNewRoute():
     lib = Dblib()
@@ -205,10 +222,11 @@ def saveCoordinate(date, latitude, longitude, speed):
     lib.insertCoordinate(routeId, date, latitude, longitude, speed, newSegment, dist)
 
 
-def saveAltitude(date, altitude):
+def saveAltitude(date, altitude, satellites):
     lib = Dblib()
     routeID = lib.getLastRouteId()
     lib.insertAltitude(routeID, date, altitude)
+    lib.insertSatellites(routeID, date, satellites)
 
 
 def saveDistance(latitude, longitude):
