@@ -95,7 +95,7 @@ def printGGA(lines):
     #  print("DGPS station ID number:", lines[14].partition("*")[0])
     print("Altitude: " + lines[9])
     print(" ")
-    dblib.saveAltitude(fixTime, lines[9])
+    dblib.saveAltitude(fixTime, lines[9], lines[7].lstrip("0"))
 
 
 #  def printGSA(lines):
