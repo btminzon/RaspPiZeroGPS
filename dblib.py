@@ -44,7 +44,7 @@ class Dblib:
             return True
         except Exception as e:
             self.connected = False
-            print("Failed to connect to DB: " + {}.format(e))
+            print("Failed to connect to DB: ".format(e))
             return False
 
     def getLastRouteId(self):
