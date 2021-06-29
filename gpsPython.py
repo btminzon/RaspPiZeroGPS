@@ -84,7 +84,7 @@ def printGGA(lines):
     fixTime = ''
     fixTime = ''.join(getTime(lines[1], "%H%M%S.%f", "%H:%M:%S"))
     #  print("Fix taken at:", fixTime, "UTC")
-    latlng = getLatLng(lines[2], lines[4], fixTime)
+    #  latlng = getLatLng(lines[2], lines[4], fixTime)
     #  print("Lat,Long: ", latlng[0].replace('-', ''), lines[3], ", ", latlng[1].replace('-', ''), lines[5], sep='')
     #  print("Fix quality (0 = invalid, 1 = fix, 2..8):", lines[6])
     #  print("Satellites:", lines[7].lstrip("0"))
@@ -130,13 +130,13 @@ def printGGA(lines):
         #  print("SNR (higher is better):", lines[7 + i * 4].partition("*")[0])
 
 
-def printGLL(lines):
+#  def printGLL(lines):
     #  print("========================================GLL========================================")
 
     fixTime = ''
 
-    fixTime = ''.join(getTime(lines[5], "%H%M%S.%f", "%H:%M:%S"))
-    latlng = getLatLng(lines[1], lines[3], fixTime)
+    #  fixTime = ''.join(getTime(lines[5], "%H%M%S.%f", "%H:%M:%S"))
+    #  latlng = getLatLng(lines[1], lines[3], fixTime)
     #  print("Lat,Long: ", latlng[0].replace('-', ''), lines[2], ", ", latlng[1].replace('-', ''), lines[4], sep='')
     #  print("Fix taken at:", fixTime, "UTC")
     #  print("Status (A=OK,V=KO):", lines[6])
@@ -144,14 +144,14 @@ def printGLL(lines):
         #  print("Mode (A=Autonomous, D=Differential, E=Estimated, N=Data not valid):", lines[7].partition("*")[0])
 
 
-def printVTG(lines):
+#  def printVTG(lines):
     #  print("========================================VTG========================================")
 
     #  print("True Track made good (deg):", lines[1], lines[2])
     #  print("Magnetic track made good (deg):", lines[3], lines[4])
     #  print("Ground speed (knots):", lines[5], lines[6])
     #  print("Ground speed (km/h):", lines[7], lines[8].partition("*")[0])
-    speed = lines[7]
+    #  speed = lines[7]
     #  if lines[9].partition("*")[0]:  # Extra field since NMEA standard 2.3
         #  print("Mode (A=Autonomous, D=Differential, E=Estimated, N=Data not valid):", lines[9].partition("*")[0])
 
@@ -197,10 +197,10 @@ if __name__ == '__main__':
             elif lines[0][2:] == "GSV":
                 pass
             elif lines[0][2:] == "GLL":
-                printGLL(lines)
+                #  printGLL(lines)
                 pass
             elif lines[0][2:] == "VTG":
-                printVTG(lines)
+                #  printVTG(lines)
                 pass
             else:
                 print("Unknown type:", lines[0])
